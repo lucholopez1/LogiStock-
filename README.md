@@ -8,4 +8,4 @@
 
 ### Description
 
-sistema de gestión de inventarios con interfaz en Tkinter. Permite registrar, buscar, actualizar y eliminar productos, además de generar reportes y almacenar datos en CSV. Diseñado para pequeñas y medianas empresas, optimiza el control de stock de manera eficiente y automatizada.
+inventory management system with an intuitive graphical interface based on Tkinter. It allows users to register products with details such as ID, name, price, quantity, category, and entry/exit dates. Additionally, it facilitates stock updates, product searches, report generation, and secure data storage using CSV files. Designed to optimize inventory administration for small and medium-sized businesses, Inventrack combines functionality and efficiency, providing precise and automated stock control.
