@@ -42,6 +42,9 @@ classDiagram
         + register_exit(quantity : int)
         # get_price() : float
         # set_price(value : float)
+        # apply_discount(discount_pct: float)
+        # reset_price()
+        # apply_incremental_discount(self, discount_pct: float)
         + __str __()
     }
 
@@ -54,8 +57,6 @@ classDiagram
         + search_product(product : Product)
         + save_to_csv(filename: str = "inventory.csv")
         + load_from_csv(filename: str = "inventory.csv")
-        + @clear_screen()
-        + @pause()
     }
 
     class Report {
