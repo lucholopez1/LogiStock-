@@ -44,7 +44,7 @@ classDiagram
         # set_price(value : float)
         # apply_discount(discount_pct: float)
         # reset_price()
-        # apply_incremental_discount(self, discount_pct: float)
+        # apply_incremental_discount(discount_pct: float)
         + __str __()
     }
 
