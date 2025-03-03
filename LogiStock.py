@@ -149,12 +149,6 @@ class Product:
                 f"Entry Date: {self.entry_date}, Exit Date: {exit_date_str}"
                 )
 
-import os
-import csv
-from product import Product
-from tkinter import messagebox
-from datetime import date
-
 class Inventory:
     """
     This class manages a collection of products in the inventory.
@@ -283,13 +277,12 @@ class Inventory:
                     entry_date=entry_date,
                     exit_date=exit_date
                 )
-                new_product._base_price = base_price  # Restore base price
+                new_product.set_base_price(base_price) # Restore base price
                 self.products.append(new_product)
 
 
         messagebox.showinfo("Success", f"Inventory loaded from {filename} successfully.")
-
-
+        
 class Report:
     # Class that manages reports of inventory
     def __init__(self, inventory: Inventory):
@@ -313,8 +306,42 @@ class Report:
                                   f"Exit Date: {product.exit_date or 'N/A'}\n")
         messagebox.showinfo("Historical Inventory Report", historical_report)
 
-
 class InventoryGUI:
+    """
+    This class represents the graphical user interface (GUI) for managing an inventory.
+
+    Attributes:
+        root (Tk): The main application window.
+        inventory (Inventory): An instance of the Inventory class that manages products.
+        notebook (ttk.Notebook): A tabbed interface for different inventory operations.
+
+    Methods:
+        create_***_tab(self):
+            Each method creates the tab for adding a new product, for removing a product, for listing all products, 
+            for searching a product by ID, for updating a product's quantity, for registering product entries and exits, 
+            for applying discounts to products, and for saving and loading inventory data from a CSV file respectively.
+
+        add_product(self):
+            Adds a new product to the inventory from user input.
+        remove_product(self):
+            Removes a product from the inventory based on user input.
+        list_products(self):
+            Displays the list of products in the inventory.
+        search_product(self):
+            Searches for a product by ID and displays its details.
+        update_quantity(self):
+            Updates the quantity of a product in the inventory.
+        register_entry(self):
+            Registers an entry (increase in quantity) for a product.
+        register_exit(self):
+            Registers an exit (decrease in quantity) for a product.
+        apply_discount(self):
+            Applies a discount to a product and updates its price.
+        save_to_csv(self):
+            Saves the inventory data to a CSV file.
+        load_from_csv(self):
+            Loads inventory data from a CSV file.
+    """
     def __init__(self, root):
         self.root = root
         self.root.title("Inventory Management")
@@ -331,6 +358,7 @@ class InventoryGUI:
         self.create_search_product_tab()
         self.create_update_quantity_tab()
         self.create_register_entry_exit_tab()
+        self.create_discount_tab()
         self.create_csv_tab()
 
     def create_add_product_tab(self):
@@ -424,6 +452,20 @@ class InventoryGUI:
         Button(frame, text="Register Entry", command=self.register_entry).grid(row=2, column=0, columnspan=2, pady=10)
         Button(frame, text="Register Exit", command=self.register_exit).grid(row=3, column=0, columnspan=2, pady=10)
 
+    def create_discount_tab(self):
+        frame = ttk.Frame(self.notebook)
+        self.notebook.add(frame, text="Apply Discount")
+
+        Label(frame, text="Product ID:").grid(row=0, column=0, padx=10, pady=5)
+        self.discount_product_id = Entry(frame)
+        self.discount_product_id.grid(row=0, column=1, padx=10, pady=5)
+
+        Label(frame, text="Discount Percentage:").grid(row=1, column=0, padx=10, pady=5)
+        self.discount_percentage = Entry(frame)
+        self.discount_percentage.grid(row=1, column=1, padx=10, pady=5)
+
+        Button(frame, text="Apply Discount", command=self.apply_discount).grid(row=2, column=0, columnspan=2, pady=10)
+
     def create_csv_tab(self):
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text="CSV Operations")
@@ -445,7 +487,10 @@ class InventoryGUI:
             category = self.add_product_category.get()
             entry_date_str = self.add_product_entry_date.get()
             entry_date = date.fromisoformat(entry_date_str) if entry_date_str else date.today()
+            
             product = Product(id, name, price, quantity, category, entry_date)
+            product.set_base_price(price)  # Establish _base_price
+
             self.inventory.add_product(product)
         except ValueError as e:
             messagebox.showerror("Error", f"Invalid input: {e}")
@@ -506,6 +551,20 @@ class InventoryGUI:
         except ValueError as e:
             messagebox.showerror("Error", f"Invalid input: {e}")
 
+    def apply_discount(self):
+        try:
+            id = int(self.discount_product_id.get())
+            discount_pct = float(self.discount_percentage.get())
+
+            product = self.inventory.search_product(id)
+            if product:
+                product.apply_discount(discount_pct)
+                messagebox.showinfo("Success", f"Discount applied successfully! New price: ${product.get_price():.2f}")
+            else:
+                messagebox.showinfo("Not Found", f"Product with ID {id} not found.")
+        except ValueError as e:
+            messagebox.showerror("Error", f"Invalid input: {e}")
+
     def save_to_csv(self):
         filename = self.csv_filename.get()
         self.inventory.save_to_csv(filename)
@@ -513,7 +572,6 @@ class InventoryGUI:
     def load_from_csv(self):
         filename = self.csv_filename.get()
         self.inventory.load_from_csv(filename)
-
 
 if __name__ == "__main__":
     root = Tk()
