@@ -37,7 +37,7 @@ class Product:
         self.id = id
         self.name = name
         self._price = price
-        self._base_price = price
+        self._base_price = price  # Original price that doesn't changes, _base_price preserves the initial value that the product had when was created.
         self.quantity = quantity
         self.category = category
         self.entry_date = entry_date
@@ -64,14 +64,27 @@ class Product:
             messagebox.showerror("Error", f"Error: {e}")
 
     def get_price(self):
+        """Returns the current price of the product (_price)."""
         return self._price
 
     def set_price(self, value: float):
+        """Sets a new current price (_price) while ensuring it remains valid."""
         if value <= 0:
             raise ValueError("Price must be greater than 0.")
         self._price = value
 
-        def apply_discount(self, discount_pct: float):
+    def get_base_price(self):
+        """Returns the original base price (_base_price) of the product."""
+        return self._base_price
+
+    def set_base_price(self, value: float):
+        """Allows modifying the base price (_base_price) while ensuring it remains valid."""
+        if value <= 0:
+            raise ValueError("Base price must be greater than 0.")
+        self._base_price = value
+        self._price = value  # Also updates the actual price if the base price changes
+
+    def apply_discount(self, discount_pct: float):
         """
         Applies a discount based on the base price (_base_price).
         discount_pct is a float representing the percentage (0 <= discount_pct <= 100).
@@ -79,13 +92,13 @@ class Product:
         if discount_pct < 0 or discount_pct > 100:
             raise ValueError("Discount percentage must be between 0 and 100.")
 
-        # Calculamos el factor de descuento
+        # Calculation of de discount factor(percentage)
         discount_factor = (100 - discount_pct) / 100.0
 
         # New price = Base price * discount factor
         new_price = self._base_price * discount_factor
 
-        # Validamos que el resultado no sea negativo (en teoría no debería suceder si discount_pct <= 100)
+        # Validates that the result isn't negative (In theory it shouldn't happen if, discount_pct <= 100)
         if new_price < 0:
             raise ValueError("Invalid discount resulting in negative price.")
 
@@ -127,7 +140,7 @@ class Product:
         self._price = new_price
         print(f"\nApplied an incremental {discount_pct:.1f}% discount to {self.name}. "
             f"New price: ${self._price:.2f}")
-
+        
     def __str__(self):
         exit_date_str = self.exit_date if self.exit_date else "N/A"
         return (
@@ -136,6 +149,11 @@ class Product:
                 f"Entry Date: {self.entry_date}, Exit Date: {exit_date_str}"
                 )
 
+import os
+import csv
+from product import Product
+from tkinter import messagebox
+from datetime import date
 
 class Inventory:
     """
@@ -212,7 +230,7 @@ class Inventory:
         with open(filename, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             # Encabezado
-            writer.writerow(["id", "name", "price", "quantity", "category", "entry_date", "exit_date"])
+            writer.writerow(["id", "name", "price", "base_price", "quantity", "category", "entry_date", "exit_date"])
             # Datos de cada producto
             for product in self.products:
                 entry_date_str = product.entry_date.isoformat()
@@ -221,6 +239,7 @@ class Inventory:
                     product.id,
                     product.name,
                     product._price,
+                    product._base_price,  # Save the base price on the csv
                     product.quantity,
                     product.category,
                     entry_date_str,
@@ -244,6 +263,7 @@ class Inventory:
                 product_id = int(row["id"])
                 name = row["name"]
                 price = float(row["price"])
+                base_price = float(row["base_price"])  # Load base price
                 quantity = int(row["quantity"])
                 category = row["category"]
 
@@ -263,7 +283,9 @@ class Inventory:
                     entry_date=entry_date,
                     exit_date=exit_date
                 )
+                new_product._base_price = base_price  # Restore base price
                 self.products.append(new_product)
+
 
         messagebox.showinfo("Success", f"Inventory loaded from {filename} successfully.")
 
