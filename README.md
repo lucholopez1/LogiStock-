@@ -23,7 +23,47 @@ todas las siguientes se encuentran incluidas en python 3.x
 - Datetime : Se usa para gestionar fechas de entrada y salida de productos en el inventario.
 - Messagebox : Se usa para mostrar mensajes de información, advertencia o error en la interfaz gráfica.
 
+## UML Class Diagram:
+``` mermaid
+classDiagram
+    class Product {
+        + id : int
+        + name : string
+        + _price : float
+        + quantity : int
+        + category : string
+        + entry_date : date
+        + exit_date : date
+        + register_entry(quantity : int)
+        + register_exit(quantity : int)
+        # get_price() : float
+        # set_price(value : float)
+        + __str __()
+    }
 
+    class Inventory {
+        + products : List~Product~ 
+        + add_product(product : Product)
+        + remove_product(id, product : Product)
+        + update_quantity(id, new_quantity : float)
+        + list_products()
+        + search_product(product : Product)
+        + save_to_csv(filename: str = "inventory.csv")
+        + load_from_csv(filename: str = "inventory.csv")
+        + @clear_screen()
+        + @pause()
+    }
+
+    class Report {
+        + inventory : Inventory
+        + _generate_report_logic()
+        + generate_current_report() Document
+        + generate_historical_report() Document
+    }
+
+    Product --* Inventory
+    Inventory --* Report : generates
+```
 
 <div align='center'>
 <figure> <img src="https://raw.githubusercontent.com/nisaespa/project_progress/refs/heads/main/TeamRocket.png" alt="" width="450" height="auto"/></br>
