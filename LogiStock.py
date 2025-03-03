@@ -37,6 +37,7 @@ class Product:
         self.id = id
         self.name = name
         self._price = price
+        self._base_price = price
         self.quantity = quantity
         self.category = category
         self.entry_date = entry_date
@@ -69,6 +70,63 @@ class Product:
         if value <= 0:
             raise ValueError("Price must be greater than 0.")
         self._price = value
+
+        def apply_discount(self, discount_pct: float):
+        """
+        Applies a discount based on the base price (_base_price).
+        discount_pct is a float representing the percentage (0 <= discount_pct <= 100).
+        """
+        if discount_pct < 0 or discount_pct > 100:
+            raise ValueError("Discount percentage must be between 0 and 100.")
+
+        # Calculamos el factor de descuento
+        discount_factor = (100 - discount_pct) / 100.0
+
+        # New price = Base price * discount factor
+        new_price = self._base_price * discount_factor
+
+        # Validamos que el resultado no sea negativo (en teoría no debería suceder si discount_pct <= 100)
+        if new_price < 0:
+            raise ValueError("Invalid discount resulting in negative price.")
+
+        # Setting new price (while not changing _base_price)
+        self._price = new_price
+        print(f"\nApplied a {discount_pct:.1f}% discount to {self.name}. "
+              f"New price: ${self._price:.2f} (Base Price: ${self._base_price:.2f})")
+
+    ''' Se verifica que discount_pct sea entre 0 y 100.
+        Se calcula discount_factor. Por ejemplo, para discount_pct = 25, discount_factor = 0.75.
+        Se multiplica el precio actual por discount_factor y se actualiza _price.
+        Se imprime un mensaje confirmando la operación.
+        Almacenar un precio base en la clase (por ejemplo, _base_price) y cada vez que se aplique un descuento, ajustar _price en función de _base_price.
+        O bien, llevar un historial de descuentos en una lista y recalcular.
+    '''
+
+    def reset_price(self):
+        """
+        Resets the product's current price (_price) to the original base price (_base_price).
+        """
+        self._price = self._base_price
+        print(f"{self.name}'s price has been reset to base price: ${self._price:.2f}")
+
+
+    def apply_incremental_discount(self, discount_pct: float):
+        """
+        Applies a discount on the current price (_price).
+        If you apply multiple times, each discount is on the already discounted price.
+        """
+        if discount_pct < 0 or discount_pct > 100:
+            raise ValueError("Discount percentage must be between 0 and 100.")
+
+        discount_factor = (100 - discount_pct) / 100.0
+        new_price = self._price * discount_factor
+
+        if new_price < 0:
+            raise ValueError("Invalid discount resulting in negative price.")
+
+        self._price = new_price
+        print(f"\nApplied an incremental {discount_pct:.1f}% discount to {self.name}. "
+            f"New price: ${self._price:.2f}")
 
     def __str__(self):
         exit_date_str = self.exit_date if self.exit_date else "N/A"
