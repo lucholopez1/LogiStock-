@@ -12,11 +12,11 @@ Sistema de gestión de inventarios con una interfaz gráfica intuitiva basada en
 
 # Características
 - Añadir y eliminar productos
-- Visualisar el inventario
-- Buscar productos mediante la ID
-- Actualizar la cnatidad
+- Visualizar el inventario
+- Buscar productos mediante su ID
+- Actualizar la cantidad
 - Registrar la salida y entrada de productos
-- Importar datos desde un archivo .csv
+- Importar y modificar datos desde un archivo .csv
 
 # Bibliotecas utilizadas
 Todas las siguientes se encuentran incluidas en python 3.x
