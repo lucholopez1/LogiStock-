@@ -42,6 +42,8 @@ classDiagram
         + register_exit(quantity : int)
         # get_price() : float
         # set_price(value : float)
+        # get_base_price() : float
+        # set_base_price(value: float)
         # apply_discount(discount_pct: float)
         # reset_price()
         # apply_incremental_discount(discount_pct: float)
