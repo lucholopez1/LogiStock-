@@ -12,32 +12,37 @@ class Product:
     price, and quantity
 
     Attributes:
-        id (int): product id.
-        name (str): product name.
-        price (float): product price.
-        quantity (int): product quantity.
-        category (str): product category
-        entry_date (date): Date the product entered inventory
-        exit_date (date): Date the product left inventory
+        id (int): Product ID.
+        name (str): Product name.
+        price (float): Product price.
+        base_price (float): Original base price of the product.
+        quantity (int): Product quantity.
+        category (str): Product category.
+        entry_date (date): Date the product entered inventory.
+        exit_date (date): Date the product left inventory.
 
     Methods:
         __str__() -> str:
             Returns product attributes.
         register_entry(self, quantity):
-            For increasing product quantity
+            Increases product quantity.
         register_exit(self, quantity):
-            For reducing product quantity
-        get_price(self):
-            Getter that returns product price
-        set_price(self, value) -> float:
-            Setter for product price
+            Reduces product quantity.
+        get_price(self) -> float:
+            Getter that returns the product price.
+        set_price(self, value: float):
+            Setter for product price.
+        get_base_price(self) -> float:
+            Getter that returns the base price of the product.
+        set_base_price(self, value: float):
+            Setter for the base price of the product.
     """
 
-    def __init__(self, id: int, name: str, price: float, quantity: int, category: str, entry_date: date, exit_date: date = None):
+    def __init__(self, id: int, name: str, price: float, quantity: int, category: str, entry_date: date, exit_date: date = None, base_price = None):
         self.id = id
         self.name = name
         self._price = price
-        self._base_price = price  # Original price that doesn't changes, _base_price preserves the initial value that the product had when was created.
+        self._base_price = base_price if base_price is not None else price  # Original price that doesn't changes, _base_price preserves the initial value that the product had when was created.
         self.quantity = quantity
         self.category = category
         self.entry_date = entry_date
@@ -63,21 +68,26 @@ class Product:
         except (ValueError, TypeError) as e:
             messagebox.showerror("Error", f"Error: {e}")
 
-    def get_price(self):
+    # Getters and setters for price and base_price
+    @property
+    def price(self):
         """Returns the current price of the product (_price)."""
         return self._price
-
-    def set_price(self, value: float):
+    
+    @price.setter
+    def price(self, value: float):
         """Sets a new current price (_price) while ensuring it remains valid."""
         if value <= 0:
             raise ValueError("Price must be greater than 0.")
         self._price = value
 
-    def get_base_price(self):
+    @property
+    def base_price(self):
         """Returns the original base price (_base_price) of the product."""
         return self._base_price
 
-    def set_base_price(self, value: float):
+    @base_price.setter
+    def base_price(self, value: float):
         """Allows modifying the base price (_base_price) while ensuring it remains valid."""
         if value <= 0:
             raise ValueError("Base price must be greater than 0.")
@@ -89,21 +99,13 @@ class Product:
         Applies a discount based on the base price (_base_price).
         discount_pct is a float representing the percentage (0 <= discount_pct <= 100).
         """
-        if discount_pct < 0 or discount_pct > 100:
+        if not (0 <= discount_pct <= 100):
             raise ValueError("Discount percentage must be between 0 and 100.")
 
-        # Calculation of de discount factor(percentage)
+        # Calculation of discount factor(percentage)
         discount_factor = (100 - discount_pct) / 100.0
+        self.price = self.base_price * discount_factor
 
-        # New price = Base price * discount factor
-        new_price = self._base_price * discount_factor
-
-        # Validates that the result isn't negative (In theory it shouldn't happen if, discount_pct <= 100)
-        if new_price < 0:
-            raise ValueError("Invalid discount resulting in negative price.")
-
-        # Setting new price (while not changing _base_price)
-        self._price = new_price
         print(f"\nApplied a {discount_pct:.1f}% discount to {self.name}. "
               f"New price: ${self._price:.2f} (Base Price: ${self._base_price:.2f})")
 
@@ -119,8 +121,8 @@ class Product:
         """
         Resets the product's current price (_price) to the original base price (_base_price).
         """
-        self._price = self._base_price
-        print(f"{self.name}'s price has been reset to base price: ${self._price:.2f}")
+        self.price = self.base_price
+        print(f"{self.name}'s price has been reset to base price: ${self.price:.2f}")
 
 
     def apply_incremental_discount(self, discount_pct: float):
@@ -132,28 +134,24 @@ class Product:
             raise ValueError("Discount percentage must be between 0 and 100.")
 
         discount_factor = (100 - discount_pct) / 100.0
-        new_price = self._price * discount_factor
+        self.price = self.price * discount_factor
 
-        if new_price < 0:
-            raise ValueError("Invalid discount resulting in negative price.")
-
-        self._price = new_price
         print(f"\nApplied an incremental {discount_pct:.1f}% discount to {self.name}. "
-            f"New price: ${self._price:.2f}")
+            f"New price: ${self.price:.2f}")
         
     def __str__(self):
         exit_date_str = self.exit_date if self.exit_date else "N/A"
         return (
-                f"ID: {self.id}, Name: {self.name}, Price: ${self._price:.2f}, "
+                f"ID: {self.id}, Name: {self.name}, Price: ${self.price:.2f}, "
                 f"Quantity: {self.quantity}, Category: {self.category}, "
                 f"Entry Date: {self.entry_date}, Exit Date: {exit_date_str}"
                 )
 
+
 class Inventory:
     """
-    This class manages a collection of products in the inventory.
-
-    Attributes: self, generates a list of products
+    Attributes:
+        products (list): A list that stores all products in the inventory.
 
     Methods:
         add_product(self, product: Product):
@@ -162,11 +160,14 @@ class Inventory:
             Removes a product from the inventory by its ID, if found.
         list_inventory(self):
             Displays all current products in the inventory.
-        search_product(self, product_id: int):
+        search_product(self, product_id: int) -> Product | None:
             Searches for a product by its ID and returns it if found, otherwise returns None.
         update_quantity(self, product_id: int, new_quantity: int):
             Updates the quantity of an existing product by its ID.
-
+        load_from_csv(self, filename: str = "inventory.csv"):
+            Loads products and information from a CSV file into the inventory.
+        save_to_csv(self, filename: str = "inventory.csv"):
+            Saves the current inventory data to a CSV file.
     """
 
     def __init__(self):
@@ -232,8 +233,8 @@ class Inventory:
                 writer.writerow([
                     product.id,
                     product.name,
-                    product._price,
-                    product._base_price,  # Save the base price on the csv
+                    product.price,
+                    product.base_price,  # Save the base price on the csv
                     product.quantity,
                     product.category,
                     entry_date_str,
@@ -242,8 +243,8 @@ class Inventory:
         messagebox.showinfo("Success", f"Inventory saved to {filename} successfully.")
 
     def load_from_csv(self, filename: str = "inventory.csv"):
-        # Loads products and information from a CSV file into the current inventory.
-        # Limpiamos la lista para "reconstruir" el inventario
+        ''' Loads products and information from a CSV file into the current inventory.'''
+        # Clear the list for "reconstructing" the inventory
         self.products.clear()
 
         # Verificamos si el archivo existe
@@ -251,37 +252,38 @@ class Inventory:
             messagebox.showwarning("Warning", f"File '{filename}' does not exist. Starting with an empty inventory.")
             return
 
-        with open(filename, mode="r", encoding="utf-8") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                product_id = int(row["id"])
-                name = row["name"]
-                price = float(row["price"])
-                base_price = float(row["base_price"])  # Load base price
-                quantity = int(row["quantity"])
-                category = row["category"]
+        try:
+            with open(filename, mode="r", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    product_id = int(row["id"])
+                    name = row["name"]
+                    price = float(row["price"])
+                    base_price = float(row["base_price"])  # Load base price
+                    quantity = int(row["quantity"])
+                    category = row["category"]
 
-                # Convertir string a date usando isoformat
-                entry_date_str = row["entry_date"]
-                exit_date_str = row["exit_date"]
+                    # Convertir string a date usando isoformat
+                    entry_date = datetime.fromisoformat(row["entry_date"]) if row["entry_date"] else None
+                    exit_date = datetime.fromisoformat(row["exit_date"]) if row["exit_date"] else None
 
-                entry_date = date.fromisoformat(entry_date_str) if entry_date_str else None
-                exit_date = date.fromisoformat(exit_date_str) if exit_date_str else None
-
-                new_product = Product(
-                    id=product_id,
-                    name=name,
-                    price=price,
-                    quantity=quantity,
-                    category=category,
-                    entry_date=entry_date,
-                    exit_date=exit_date
-                )
-                new_product.set_base_price(base_price) # Restore base price
-                self.products.append(new_product)
+                    new_product = Product(
+                        id=product_id,
+                        name=name,
+                        base_price=price,
+                        quantity=quantity,
+                        category=category,
+                        entry_date=entry_date,
+                        exit_date=exit_date
+                    )
+                    new_product.price = price  # Setter for price
+                    new_product.base_price = base_price # Restore base price
+                    self.products.append(new_product)
 
 
-        messagebox.showinfo("Success", f"Inventory loaded from {filename} successfully.")
+            messagebox.showinfo("Success", f"Inventory loaded from {filename} successfully.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load inventory: {e}")
         
 class Report:
     # Class that manages reports of inventory
@@ -366,28 +368,28 @@ class InventoryGUI:
         self.notebook.add(frame, text="Add Product")
 
         Label(frame, text="Product ID:").grid(row=0, column=0, padx=10, pady=5)
-        self.add_product_id = Entry(frame)
-        self.add_product_id.grid(row=0, column=1, padx=10, pady=5)
+        self.add_id = Entry(frame)
+        self.add_id.grid(row=0, column=1, padx=10, pady=5)
 
         Label(frame, text="Product Name:").grid(row=1, column=0, padx=10, pady=5)
-        self.add_product_name = Entry(frame)
-        self.add_product_name.grid(row=1, column=1, padx=10, pady=5)
+        self.add_name = Entry(frame)
+        self.add_name.grid(row=1, column=1, padx=10, pady=5)
 
         Label(frame, text="Product Price:").grid(row=2, column=0, padx=10, pady=5)
-        self.add_product_price = Entry(frame)
-        self.add_product_price.grid(row=2, column=1, padx=10, pady=5)
+        self.add_price = Entry(frame)
+        self.add_price.grid(row=2, column=1, padx=10, pady=5)
 
         Label(frame, text="Product Quantity:").grid(row=3, column=0, padx=10, pady=5)
-        self.add_product_quantity = Entry(frame)
-        self.add_product_quantity.grid(row=3, column=1, padx=10, pady=5)
+        self.add_quantity = Entry(frame)
+        self.add_quantity.grid(row=3, column=1, padx=10, pady=5)
 
         Label(frame, text="Product Category:").grid(row=4, column=0, padx=10, pady=5)
-        self.add_product_category = Entry(frame)
-        self.add_product_category.grid(row=4, column=1, padx=10, pady=5)
+        self.add_category = Entry(frame)
+        self.add_category.grid(row=4, column=1, padx=10, pady=5)
 
         Label(frame, text="Entry Date (YYYY-MM-DD):").grid(row=5, column=0, padx=10, pady=5)
-        self.add_product_entry_date = Entry(frame)
-        self.add_product_entry_date.grid(row=5, column=1, padx=10, pady=5)
+        self.add_entry_date = Entry(frame)
+        self.add_entry_date.grid(row=5, column=1, padx=10, pady=5)
 
         Button(frame, text="Add Product", command=self.add_product).grid(row=6, column=0, columnspan=2, pady=10)
 
@@ -478,92 +480,86 @@ class InventoryGUI:
         Button(frame, text="Save to CSV", command=self.save_to_csv).grid(row=1, column=0, columnspan=2, pady=10)
         Button(frame, text="Load from CSV", command=self.load_from_csv).grid(row=2, column=0, columnspan=2, pady=10)
 
-    def add_product(self):
-        try:
-            id = int(self.add_product_id.get())
-            name = self.add_product_name.get()
-            price = float(self.add_product_price.get())
-            quantity = int(self.add_product_quantity.get())
-            category = self.add_product_category.get()
-            entry_date_str = self.add_product_entry_date.get()
-            entry_date = date.fromisoformat(entry_date_str) if entry_date_str else date.today()
-            
-            product = Product(id, name, price, quantity, category, entry_date)
-            product.set_base_price(price)  # Establish _base_price
 
-            self.inventory.add_product(product)
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    def validate_inputs(expected_inputs):
+        def decorator(func):
+            def wrapper(self, *args, **kwargs):
+                validated_data = {}
+                for key, value in expected_inputs.items():
+                    entry_value = getattr(self, key).get().strip()
+                    if not entry_value:
+                        messagebox.showerror("Error", f"Input for {key} cannot be empty.")
+                        return
+                    try:
+                        validated_data[key] = value(entry_value)
+                    except ValueError as e:
+                        messagebox.showerror("Error", f"Invalid input for {key}: {e}")
+                        return
+                return func(self, **validated_data)
+            return wrapper
+        return decorator
+    
 
-    def remove_product(self):
-        try:
-            id = int(self.remove_product_id.get())
-            self.inventory.remove_product(id)
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    @validate_inputs({
+        'add_id': int,
+        'add_name': str,
+        'add_price': float,
+        'add_quantity': int,
+        'add_category': str,
+        'add_entry_date': str
+    })
+    def add_product(self, add_id, add_name, add_price, add_quantity, add_category, add_entry_date):
+        entry_date = date.fromisoformat(add_entry_date) if add_entry_date else date.today()
+        product = Product(add_id, add_name, add_price, add_quantity, add_category, entry_date)
+        product.base_price = add_price # Establish _base_price
+        self.inventory.add_product(product)
+
+    @validate_inputs({'remove_product_id': int})
+    def remove_product(self, remove_product_id):
+        self.inventory.remove_product(remove_product_id)
 
     def list_products(self):
         self.list_products_text.delete(1.0, END)
         inventory_list = self.inventory.list_inventory()
         self.list_products_text.insert(END, inventory_list)
 
-    def search_product(self):
-        try:
-            id = int(self.search_product_id.get())
-            product = self.inventory.search_product(id)
-            if product:
-                self.search_product_text.delete(1.0, END)
-                self.search_product_text.insert(END, str(product))
-            else:
-                messagebox.showinfo("Not Found", f"Product with ID {id} not found.")
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    @validate_inputs({'search_product_id': int})
+    def search_product(self, search_product_id):
+        product = self.inventory.search_product(search_product_id)
+        self.search_product_text.delete(1.0, END)
+        if product:
+            self.search_product_text.insert(END, str(product))
+        else:
+            messagebox.showinfo("Not Found", f"Product with ID {search_product_id} not found.")
 
-    def update_quantity(self):
-        try:
-            id = int(self.update_quantity_id.get())
-            new_quantity = int(self.update_quantity_value.get())
-            self.inventory.update_quantity(id, new_quantity)
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    @validate_inputs({'update_quantity_id': int, 'update_quantity_value': int})
+    def update_quantity(self, update_quantity_id, update_quantity_value):
+        self.inventory.update_quantity(update_quantity_id, update_quantity_value)
 
-    def register_entry(self):
-        try:
-            id = int(self.entry_exit_product_id.get())
-            quantity = int(self.entry_exit_quantity.get())
-            product = self.inventory.search_product(id)
-            if product:
-                product.register_entry(quantity)
-            else:
-                messagebox.showinfo("Not Found", f"Product with ID {id} not found.")
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    @validate_inputs({'entry_exit_product_id': int, 'entry_exit_quantity': int})
+    def register_entry(self, entry_exit_product_id, entry_exit_quantity):
+        product = self.inventory.search_product(entry_exit_product_id)
+        if product:
+            product.register_entry(entry_exit_quantity)
+        else:
+            messagebox.showinfo("Not Found", f"Product with ID {entry_exit_product_id} not found.")
 
-    def register_exit(self):
-        try:
-            id = int(self.entry_exit_product_id.get())
-            quantity = int(self.entry_exit_quantity.get())
-            product = self.inventory.search_product(id)
-            if product:
-                product.register_exit(quantity)
-            else:
-                messagebox.showinfo("Not Found", f"Product with ID {id} not found.")
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    @validate_inputs({'entry_exit_product_id': int, 'entry_exit_quantity': int})
+    def register_exit(self, entry_exit_product_id, entry_exit_quantity):
+        product = self.inventory.search_product(entry_exit_product_id)
+        if product:
+            product.register_exit(entry_exit_quantity)
+        else:
+            messagebox.showinfo("Not Found", f"Product with ID {entry_exit_product_id} not found.")
 
-    def apply_discount(self):
-        try:
-            id = int(self.discount_product_id.get())
-            discount_pct = float(self.discount_percentage.get())
-
-            product = self.inventory.search_product(id)
-            if product:
-                product.apply_discount(discount_pct)
-                messagebox.showinfo("Success", f"Discount applied successfully! New price: ${product.get_price():.2f}")
-            else:
-                messagebox.showinfo("Not Found", f"Product with ID {id} not found.")
-        except ValueError as e:
-            messagebox.showerror("Error", f"Invalid input: {e}")
+    @validate_inputs({'discount_product_id': int, 'discount_percentage': float})
+    def apply_discount(self, discount_product_id, discount_percentage):
+        product = self.inventory.search_product(discount_product_id)
+        if product:
+            product.apply_discount(discount_percentage)
+            messagebox.showinfo("Success", f"Discount applied! New price: ${product.price():.2f}")
+        else:
+            messagebox.showinfo("Not Found", f"Product with ID {discount_product_id} not found.")
 
     def save_to_csv(self):
         filename = self.csv_filename.get()
@@ -572,7 +568,7 @@ class InventoryGUI:
     def load_from_csv(self):
         filename = self.csv_filename.get()
         self.inventory.load_from_csv(filename)
-
+        
 if __name__ == "__main__":
     root = Tk()
     app = InventoryGUI(root)
