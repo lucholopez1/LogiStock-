@@ -6,6 +6,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 
 class Product:
+    
     """
     This class represents a product with attributes such as ID, name,
     price, and quantity
@@ -46,6 +47,7 @@ class Product:
         self.category = category
         self.entry_date = entry_date
         self.exit_date = exit_date
+
 
     def register_entry(self, quantity: int):
         try:
@@ -108,21 +110,12 @@ class Product:
         print(f"\nApplied a {discount_pct:.1f}% discount to {self.name}. "
               f"New price: ${self._price:.2f} (Base Price: ${self._base_price:.2f})")
 
-    ''' Se verifica que discount_pct sea entre 0 y 100.
-        Se calcula discount_factor. Por ejemplo, para discount_pct = 25, discount_factor = 0.75.
-        Se multiplica el precio actual por discount_factor y se actualiza _price.
-        Se imprime un mensaje confirmando la operación.
-        Almacenar un precio base en la clase (por ejemplo, _base_price) y cada vez que se aplique un descuento, ajustar _price en función de _base_price.
-        O bien, llevar un historial de descuentos en una lista y recalcular.
-    '''
-
     def reset_price(self):
         """
         Resets the product's current price (_price) to the original base price (_base_price).
         """
         self.price = self.base_price
         print(f"{self.name}'s price has been reset to base price: ${self.price:.2f}")
-
 
     def apply_incremental_discount(self, discount_pct: float):
         """
@@ -263,8 +256,15 @@ class Inventory:
                     category = row["category"]
 
                     # Convertir string a date usando isoformat
-                    entry_date = datetime.fromisoformat(row["entry_date"]) if row["entry_date"] else None
-                    exit_date = datetime.fromisoformat(row["exit_date"]) if row["exit_date"] else None
+                    try:
+                        entry_date = datetime.fromisoformat(row["entry_date"]).date() if row["entry_date"] else None
+                    except ValueError:
+                        entry_date = date.today
+
+                    try:
+                        exit_date = datetime.fromisoformat(row["exit_date"]).date() if row["exit_date"] else None
+                    except ValueError:
+                        exit_date = None 
 
                     new_product = Product(
                         id=product_id,
@@ -282,6 +282,7 @@ class Inventory:
             messagebox.showinfo("Success", f"Inventory loaded from {filename} successfully.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load inventory: {e}")
+
         
 class Report:
     # Class that manages reports of inventory
@@ -323,6 +324,17 @@ def validate_inputs(expected_inputs):
             return func(self, **validated_data)
         return wrapper
     return decorator
+
+from inventory import Inventory
+from product import Product
+from report import Report
+from tkinter import *
+from tkinter import ttk, messagebox, Button
+from datetime import date
+from validation import validate_inputs
+
+
+
 
 class InventoryGUI:
     """
@@ -506,6 +518,10 @@ class InventoryGUI:
         Button(frame, text="Save to CSV", command=self.save_to_csv).grid(row=1, column=0, columnspan=2, pady=10)
         Button(frame, text="Load from CSV", command=self.load_from_csv).grid(row=2, column=0, columnspan=2, pady=10)
 
+
+
+    
+
     @validate_inputs({
         'add_id': int,
         'add_name': str,
@@ -580,8 +596,3 @@ class InventoryGUI:
     def load_from_csv(self):
         filename = self.csv_filename.get()
         self.inventory.load_from_csv(filename)
-        
-if __name__ == "__main__":
-    root = Tk()
-    app = InventoryGUI(root)
-    root.mainloop()
