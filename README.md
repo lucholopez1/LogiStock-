@@ -41,10 +41,10 @@ classDiagram
         + exit_date : date
         + register_entry(quantity : int)
         + register_exit(quantity : int)
-        # get_price() : float
-        # set_price(value : float)
-        # get_base_price() : float
-        # set_base_price(value: float)
+        @property price() : float
+        @price.setter (value : float)
+        @property base_price() : float
+        @base_price.setter (value: float)
         # apply_discount(discount_pct: float)
         # reset_price()
         # apply_incremental_discount(discount_pct: float)
@@ -65,11 +65,35 @@ classDiagram
     class Report {
         + inventory : Inventory
         + _generate_report_logic()
-        + generate_current_report() Document
-        + generate_historical_report() Document
+        + _open_report(file_path)
+        + generate_current_report() txt Document
     }
+
+    class InventoryGUI {
+        + root
+        + inventory : Inventory
+        + create_add_product_tab()
+        + create_remove_product_tab()
+        + create_list_products_tab()
+        + create_search_product_tab()
+        + create_update_quantity_tab()
+        + create_register_entry_exit_tab()
+        + create_discount_tab()
+        + create_csv_tab()
+        + add_product()
+        + remove_product()
+        + update_quantity()
+        + list_products()
+        + search_product()
+        + register_exit()
+        + register_entry()
+        + apply_discount()
+        + save_to_csv()
+        + load_from_csv()
+        + generate_report()
 
     Product --* Inventory
     Inventory --* Report : generates
+    Inventory --> InventoryGUI
 ```
 *Juan Rodríguez - Luis López - Nicolas Estupiñan*
