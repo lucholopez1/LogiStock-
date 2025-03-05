@@ -60,14 +60,14 @@ classDiagram
         + search_product(product : Product)
         + save_to_csv(filename: str = "inventory.csv")
         + load_from_csv(filename: str = "inventory.csv")
+    
     }
-
     class Report {
         + inventory : Inventory
         + _generate_report_logic()
         + _open_report(file_path)
         + generate_current_report() txt Document
-    }
+        }
 
     class InventoryGUI {
         + root
@@ -91,9 +91,10 @@ classDiagram
         + save_to_csv()
         + load_from_csv()
         + generate_report()
+        }
 
     Product --* Inventory
     Inventory --* Report : generates
-    Inventory --> InventoryGUI
+    Inventory --|> InventoryGUI
 ```
 *Juan Rodríguez - Luis López - Nicolas Estupiñan*
