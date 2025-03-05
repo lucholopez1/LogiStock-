@@ -97,4 +97,45 @@ classDiagram
     Inventory --* Report : generates
     Inventory --|> InventoryGUI
 ```
+
+## 📌 Requerimientos
+
+- **Python 3.X**
+- **Tkinter** (incluido con Python)
+- Librerías estándar: `csv`, `os`, `threading`, `datetime`
+
+---
+
+## 🚀 Instalación y Uso
+
+### 1️⃣ Crear un Entorno Virtual
+
+Ejecuta el siguiente comando en la terminal:
+
+```bash
+python -m venv venv
+```
+## 🖥️ Método manual (Windows)
+Si usas Windows, sigue estos pasos en la terminal (cmd o PowerShell):
+
+### 1. Crear el entorno virtual:
+
+python -m venv venv
+
+### 2. Activarlo:
+
+Si usas CMD:
+
+venv\Scripts\activate.bat
+
+Si usas PowerShell (debes permitir scripts con Set-ExecutionPolicy Unrestricted -Scope Process si es necesario):
+
+venv\Scripts\Activate.ps1
+
+3️⃣ Actualizar pip (opcional pero recomendado):
+
+python -m pip install --upgrade pip
+
+4️⃣ Instalar dependencias:
+
 *Juan Rodríguez - Luis López - Nicolas Estupiñan*
