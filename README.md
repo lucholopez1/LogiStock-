@@ -108,7 +108,7 @@ classDiagram
 
 ## 🚀 Instalación y Uso
 
-## Entorno Virtual
+## Creación de Entorno Virtual e instalación
 
 ## 🐧 Método para Linux/Mac
 
