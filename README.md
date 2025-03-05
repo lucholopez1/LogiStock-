@@ -106,20 +106,26 @@ classDiagram
 
 ---
 
-## 🚀 Instalación y Uso
-
-## Creación de Entorno Virtual e instalación
+# Creación de Entorno Virtual e instalación
 
 ## 🐧 Método para Linux/Mac
-
-Ejecuta el siguiente comando en la terminal para crear el entorno virtual:
+Ejecuta el siguiente comando en la terminal para clonar el repo
+```bash
+git clone https://github.com/lucholopez1/LogiStock-
+cd LogiStock-
+```
+Ahora ejecuta el siguiente comando para crear y activar el entorno virtual:
 
 ```bash
 bash setup_environment.sh
 ```
 
 ## 🖥️ Método para Windows
-Si usas Windows, sigue estos pasos en la terminal (cmd o PowerShell):
+Si usas Windows,
+Abrir la terminal y navegar hasta la ubicación de descarga de la carpeta del proyecto
+cd C:\ruta\de\la\carpeta
+
+Sigue estos pasos en la terminal (cmd o PowerShell):
 
 ### 1. Crear el entorno virtual:
 ```bash
@@ -142,7 +148,10 @@ venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 ```
 
-### 4. Para
+### 4. Para ejecutar el programa
 
+```bash
+python main.py
+```
 
 *Juan Rodríguez - Luis López - Nicolas Estupiñan*
