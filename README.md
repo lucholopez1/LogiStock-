@@ -100,7 +100,7 @@ classDiagram
 
 ## 📌 Requerimientos
 
-- **Python 3.X**
+- **Python 3.6+**
 - **Tkinter** (incluido con Python)
 - Librerías estándar: `csv`, `os`, `threading`, `datetime`
 
@@ -108,34 +108,41 @@ classDiagram
 
 ## 🚀 Instalación y Uso
 
-### 1️⃣ Crear un Entorno Virtual
+## Entorno Virtual
 
-Ejecuta el siguiente comando en la terminal:
+## 🐧 Método para Linux/Mac
+
+Ejecuta el siguiente comando en la terminal para crear el entorno virtual:
 
 ```bash
-python -m venv venv
+bash setup_environment.sh
 ```
-## 🖥️ Método manual (Windows)
+
+## 🖥️ Método para Windows
 Si usas Windows, sigue estos pasos en la terminal (cmd o PowerShell):
 
 ### 1. Crear el entorno virtual:
-
+```bash
 python -m venv venv
-
+```
 ### 2. Activarlo:
 
-Si usas CMD:
+Para CMD:
 
+```bash
 venv\Scripts\activate.bat
+```
 
-Si usas PowerShell (debes permitir scripts con Set-ExecutionPolicy Unrestricted -Scope Process si es necesario):
-
+Para PowerShell (debes permitir scripts con Set-ExecutionPolicy Unrestricted -Scope Process si es necesario):
+```bash
 venv\Scripts\Activate.ps1
-
-3️⃣ Actualizar pip (opcional pero recomendado):
-
+```
+### 3. Actualizar pip (opcional pero recomendado):
+```bash
 python -m pip install --upgrade pip
+```
 
-4️⃣ Instalar dependencias:
+### 4. Para
+
 
 *Juan Rodríguez - Luis López - Nicolas Estupiñan*
