@@ -1,10 +1,9 @@
 import csv
 import os
 import threading
-from datetime import date
+from datetime import date, datetime
 from tkinter import *
 from tkinter import ttk, messagebox
-
 
 class Product:
     """
@@ -280,7 +279,6 @@ class Inventory:
                     new_product.base_price = base_price # Restore base price
                     self.products.append(new_product)
 
-
             messagebox.showinfo("Success", f"Inventory loaded from {filename} successfully.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load inventory: {e}")
@@ -307,6 +305,24 @@ class Report:
             historical_report += (f"Product: {product.name}, Entry Date: {product.entry_date}, "
                                   f"Exit Date: {product.exit_date or 'N/A'}\n")
         messagebox.showinfo("Historical Inventory Report", historical_report)
+
+def validate_inputs(expected_inputs):
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            validated_data = {}
+            for key, value in expected_inputs.items():
+                entry_value = getattr(self, key).get().strip()
+                if not entry_value:
+                    messagebox.showerror("Error", f"Input for {key} cannot be empty.")
+                    return
+                try:
+                    validated_data[key] = value(entry_value)
+                except ValueError as e:
+                    messagebox.showerror("Error", f"Invalid input for {key}: {e}")
+                    return
+            return func(self, **validated_data)
+        return wrapper
+    return decorator
 
 class InventoryGUI:
     """
@@ -354,6 +370,8 @@ class InventoryGUI:
         self.notebook.pack(expand=1, fill='both')
 
         # Add tabs
+        self.report_button = Button(root, text="Generar Reporte", command=self.generate_report)
+        self.report_button.pack(pady=10)
         self.create_add_product_tab()
         self.create_remove_product_tab()
         self.create_list_products_tab()
@@ -362,6 +380,14 @@ class InventoryGUI:
         self.create_register_entry_exit_tab()
         self.create_discount_tab()
         self.create_csv_tab()
+
+    def generate_report(self):
+        try:
+            report = Report()  # Instancia de la clase Report
+            report.generate()  # Método para generar el reporte
+            messagebox.showinfo("Éxito", "Reporte generado correctamente.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar el reporte: {e}")
 
     def create_add_product_tab(self):
         frame = ttk.Frame(self.notebook)
@@ -480,26 +506,6 @@ class InventoryGUI:
         Button(frame, text="Save to CSV", command=self.save_to_csv).grid(row=1, column=0, columnspan=2, pady=10)
         Button(frame, text="Load from CSV", command=self.load_from_csv).grid(row=2, column=0, columnspan=2, pady=10)
 
-
-    def validate_inputs(expected_inputs):
-        def decorator(func):
-            def wrapper(self, *args, **kwargs):
-                validated_data = {}
-                for key, value in expected_inputs.items():
-                    entry_value = getattr(self, key).get().strip()
-                    if not entry_value:
-                        messagebox.showerror("Error", f"Input for {key} cannot be empty.")
-                        return
-                    try:
-                        validated_data[key] = value(entry_value)
-                    except ValueError as e:
-                        messagebox.showerror("Error", f"Invalid input for {key}: {e}")
-                        return
-                return func(self, **validated_data)
-            return wrapper
-        return decorator
-    
-
     @validate_inputs({
         'add_id': int,
         'add_name': str,
@@ -513,10 +519,12 @@ class InventoryGUI:
         product = Product(add_id, add_name, add_price, add_quantity, add_category, entry_date)
         product.base_price = add_price # Establish _base_price
         self.inventory.add_product(product)
+        self.list_products()
 
     @validate_inputs({'remove_product_id': int})
     def remove_product(self, remove_product_id):
         self.inventory.remove_product(remove_product_id)
+        self.list_products()
 
     def list_products(self):
         self.list_products_text.delete(1.0, END)
@@ -535,6 +543,7 @@ class InventoryGUI:
     @validate_inputs({'update_quantity_id': int, 'update_quantity_value': int})
     def update_quantity(self, update_quantity_id, update_quantity_value):
         self.inventory.update_quantity(update_quantity_id, update_quantity_value)
+        self.list_products()
 
     @validate_inputs({'entry_exit_product_id': int, 'entry_exit_quantity': int})
     def register_entry(self, entry_exit_product_id, entry_exit_quantity):
@@ -556,8 +565,11 @@ class InventoryGUI:
     def apply_discount(self, discount_product_id, discount_percentage):
         product = self.inventory.search_product(discount_product_id)
         if product:
-            product.apply_discount(discount_percentage)
-            messagebox.showinfo("Success", f"Discount applied! New price: ${product.price():.2f}")
+            try:
+                product.apply_discount(discount_percentage)
+                messagebox.showinfo("Success", f"Discount applied! New price: ${product.price:.2f}")
+            except ValueError as e:
+                messagebox.showerror("Error", str(e))
         else:
             messagebox.showinfo("Not Found", f"Product with ID {discount_product_id} not found.")
 
