@@ -1,24 +1,20 @@
-import csv
 import os
+import csv
 import threading
-from datetime import date, datetime
+from tkinter import ttk, Button, filedialog, messagebox
 from tkinter import *
-from tkinter import ttk, messagebox
+from datetime import date, datetime
+from validation import validate_inputs
 
 class Product:
-    
     """
     This class represents a product with attributes such as ID, name,
     price, and quantity
 
     Attributes:
-        id (int): Product ID.
-        name (str): Product name.
-        price (float): Product price.
-        base_price (float): Original base price of the product.
-        quantity (int): Product quantity.
-        category (str): Product category.
-        entry_date (date): Date the product entered inventory.
+        id (int): Product ID, name (str): Product name, price (float): Product price,
+        base_price (float): Original base price of the product, quantity (int): Product quantity,
+        category (str): Product category, entry_date (date): Date the product entered inventory,
         exit_date (date): Date the product left inventory.
 
     Methods:
@@ -28,13 +24,13 @@ class Product:
             Increases product quantity.
         register_exit(self, quantity):
             Reduces product quantity.
-        get_price(self) -> float:
+        @property price(self) -> float:
             Getter that returns the product price.
-        set_price(self, value: float):
+        @price.setter (self, value: float):
             Setter for product price.
-        get_base_price(self) -> float:
+        @property base_price(self) -> float:
             Getter that returns the base price of the product.
-        set_base_price(self, value: float):
+        @base_price.setter(self, value: float):
             Setter for the base price of the product.
     """
 
@@ -44,6 +40,7 @@ class Product:
         self._price = price
         self._base_price = base_price if base_price is not None else price  # Original price that doesn't changes, _base_price preserves the initial value that the product had when was created.
         self.quantity = quantity
+        self.quantity_history = [(datetime.now(), quantity)]
         self.category = category
         self.entry_date = entry_date
         self.exit_date = exit_date
@@ -139,7 +136,6 @@ class Product:
                 f"Entry Date: {self.entry_date}, Exit Date: {exit_date_str}"
                 )
 
-
 class Inventory:
     """
     Attributes:
@@ -207,6 +203,7 @@ class Inventory:
                 raise ValueError("Quantity cannot be negative.")  # Exception if new_quantity is negative
 
             product.quantity = new_quantity
+            self.quantity_history.append((datetime.now(), new_quantity))
             messagebox.showinfo("Quantity Updated", f"Successfully updated quantity of {product.name} to {product.quantity}.\n")
 
         except (ValueError, TypeError) as e:
@@ -269,7 +266,7 @@ class Inventory:
                     new_product = Product(
                         id=product_id,
                         name=name,
-                        base_price=price,
+                        price=price,
                         quantity=quantity,
                         category=category,
                         entry_date=entry_date,
@@ -283,29 +280,50 @@ class Inventory:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load inventory: {e}")
 
-        
 class Report:
-    # Class that manages reports of inventory
-    def __init__(self, inventory: Inventory):
+    def __init__(self, inventory : Inventory):
         self.inventory = inventory
 
-    def _generate_report_logic(self):
-        # Internal method to generate the report without blocking the main thread.
-        report = self.inventory.list_inventory()
-        messagebox.showinfo("Current Inventory Report", report)
+    def _generate_report_logic(self, file_path):
+        """ Genera un reporte de inventario y lo guarda en un archivo .txt """
+        try:
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write("📦 INVENTORY REPORT 📦\n\n")
+                file.write("Product Name | Entry Date | Exit Date | Current Quantity | Quantity Changes\n")
+                file.write("-" * 80 + "\n")
+
+                for product in self.inventory.products:
+                    entry_date = product.entry_date
+                    exit_date = product.exit_date if product.exit_date else "Still in stock"
+                    quantity_changes = ", ".join([f"{change} on {date}" for date, change in product.quantity_history])
+                    
+                    file.write(f"{product.name} | {entry_date} | {exit_date} | {product.quantity} | {quantity_changes}\n")
+            
+            messagebox.showinfo("Report Generated", f"Report saved successfully:\n{file_path}")
+            self._open_report(file_path)  # Abre el archivo después de crearlo
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate report: {str(e)}")
+
+    def _open_report(self, file_path):
+        """ Intenta abrir el archivo del reporte en el bloc de notas """
+        import os
+        try:
+            os.startfile(file_path)  # Windows
+        except AttributeError:
+            os.system(f"open {file_path}")  # macOS
+        except Exception:
+            os.system(f"xdg-open {file_path}")  # Linux
 
     def generate_current_report(self):
-        # Generates a report of the current inventory on a separated thread
-        thread = threading.Thread(target=self._generate_report_logic)
-        thread.start()
+        """ Permite al usuario elegir dónde guardar el archivo y genera el reporte en un hilo separado """
+        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
+                                                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+                                                 title="Save Report As")
+        if file_path:
+            thread = threading.Thread(target=self._generate_report_logic, args=(file_path,))
+            thread.start()
 
-    def generate_historical_report(self):
-        # Generates an historical report of inventory
-        historical_report = "Historical Inventory Report:\n"
-        for product in self.inventory.products:
-            historical_report += (f"Product: {product.name}, Entry Date: {product.entry_date}, "
-                                  f"Exit Date: {product.exit_date or 'N/A'}\n")
-        messagebox.showinfo("Historical Inventory Report", historical_report)
 
 def validate_inputs(expected_inputs):
     def decorator(func):
@@ -325,17 +343,6 @@ def validate_inputs(expected_inputs):
         return wrapper
     return decorator
 
-from inventory import Inventory
-from product import Product
-from report import Report
-from tkinter import *
-from tkinter import ttk, messagebox, Button
-from datetime import date
-from validation import validate_inputs
-
-
-
-
 class InventoryGUI:
     """
     This class represents the graphical user interface (GUI) for managing an inventory.
@@ -350,27 +357,6 @@ class InventoryGUI:
             Each method creates the tab for adding a new product, for removing a product, for listing all products, 
             for searching a product by ID, for updating a product's quantity, for registering product entries and exits, 
             for applying discounts to products, and for saving and loading inventory data from a CSV file respectively.
-
-        add_product(self):
-            Adds a new product to the inventory from user input.
-        remove_product(self):
-            Removes a product from the inventory based on user input.
-        list_products(self):
-            Displays the list of products in the inventory.
-        search_product(self):
-            Searches for a product by ID and displays its details.
-        update_quantity(self):
-            Updates the quantity of a product in the inventory.
-        register_entry(self):
-            Registers an entry (increase in quantity) for a product.
-        register_exit(self):
-            Registers an exit (decrease in quantity) for a product.
-        apply_discount(self):
-            Applies a discount to a product and updates its price.
-        save_to_csv(self):
-            Saves the inventory data to a CSV file.
-        load_from_csv(self):
-            Loads inventory data from a CSV file.
     """
     def __init__(self, root):
         self.root = root
@@ -381,7 +367,7 @@ class InventoryGUI:
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(expand=1, fill='both')
 
-        # Add tabs
+        # Add tabs and reports Button
         self.report_button = Button(root, text="Generar Reporte", command=self.generate_report)
         self.report_button.pack(pady=10)
         self.create_add_product_tab()
@@ -392,14 +378,6 @@ class InventoryGUI:
         self.create_register_entry_exit_tab()
         self.create_discount_tab()
         self.create_csv_tab()
-
-    def generate_report(self):
-        try:
-            report = Report()  # Instancia de la clase Report
-            report.generate()  # Método para generar el reporte
-            messagebox.showinfo("Éxito", "Reporte generado correctamente.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al generar el reporte: {e}")
 
     def create_add_product_tab(self):
         frame = ttk.Frame(self.notebook)
@@ -519,9 +497,6 @@ class InventoryGUI:
         Button(frame, text="Load from CSV", command=self.load_from_csv).grid(row=2, column=0, columnspan=2, pady=10)
 
 
-
-    
-
     @validate_inputs({
         'add_id': int,
         'add_name': str,
@@ -591,8 +566,28 @@ class InventoryGUI:
 
     def save_to_csv(self):
         filename = self.csv_filename.get()
+        if not filename:
+            filename = "inventory.csv"
         self.inventory.save_to_csv(filename)
-
+        self.list_products()
+        
     def load_from_csv(self):
-        filename = self.csv_filename.get()
+        filename = self.csv_filename.get().strip()
+        if not filename:
+            filename = "inventory.csv"
         self.inventory.load_from_csv(filename)
+        self.list_products()
+
+    def generate_report(self):
+        try:
+            report = Report(self.inventory)  # Instancia de la clase Report
+            report.generate_current_report()  # Método para generar el reporte
+            messagebox.showinfo("Reporte generated succesfully.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al generar el reporte: {e}")
+
+if __name__ == "__main__":
+    root = Tk()
+    app = InventoryGUI(root)
+    root.mainloop()
+    
