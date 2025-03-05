@@ -23,10 +23,9 @@ Sistema de gestión de inventarios con una interfaz gráfica intuitiva basada en
 Todas las siguientes se encuentran incluidas en `python 3.x`.
 - Tkinter : se usa para la interfaz gráfica de usuario (GUI), permitiendo la gestión visual del inventario.
 - CSV : Facilita la lectura y escritura de archivos CSV para guardar y cargar datos del inventario.
-- OS : Permite interactuar con el sistema de archivos, verificando la existencia de archivos antes de cargarlos.
+- OS : Permite interactuar con el sistema operativo, verificando la existencia de archivos antes de cargarlos.
 - Threading : Se emplea para la ejecución de procesos en segundo plano, evitando bloqueos en la interfaz de usuario.
 - Datetime : Se usa para gestionar fechas de entrada y salida de productos en el inventario.
-- Messagebox : Se usa para mostrar mensajes de información, advertencia o error en la interfaz gráfica.
 
 ## Diagrama de clases UML:
 ``` mermaid
