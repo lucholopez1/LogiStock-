@@ -122,8 +122,8 @@ bash setup_environment.sh
 
 ## 🖥️ Método para Windows
 Si usas Windows,
-Abrir la terminal y navegar hasta la ubicación de descarga de la carpeta del proyecto
-cd C:\ruta\de\la\carpeta
+Abrir la terminal y navegar hasta la ubicación de descarga de la carpeta del proyecto, por ejemplo:
+cd C:\Users\User\Documents\LogiStock
 
 Sigue estos pasos en la terminal (cmd o PowerShell):
 
